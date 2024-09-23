@@ -1,0 +1,18 @@
+version: '3.0'
+
+services:
+  sidecar:
+    image: bladepipe/worker:${worker_version}
+    container_name: bladepipe-worker
+    volumes:
+      - bladepipe_worker_log_volume:/home/bladepipe/logs
+      - bladepipe_worker_config_volume:/home/bladepipe/bladepipe/global_conf
+    ports:
+      - "18787:8787"
+    env_file:
+      - .env
+volumes:
+  bladepipe_worker_log_volume:
+    external: true
+  bladepipe_worker_config_volume:
+    external: true
