@@ -67,9 +67,6 @@ function download() {
 }
 
 function upgrade() {
-    echo "Begin to upgrade BladePipe Worker..."
-    echo ""
-
     cp $USERPATH/tar_gz/bladepipe.tgz $USERPATH/
 
     cd $USERPATH
@@ -118,15 +115,48 @@ function upgrade() {
 }
 
 function __main() {
-    echo "Begin to upgrade BladePipe Worker."
+    # Run the curl command in the background and write the output to a temporary file
+    temp_file=$(mktemp)
+    curl -s -L -f https://download.bladepipe.com/version > "$temp_file" &
+    curl_pid=$!
+
+    # Display a loading spinner while waiting for the curl command to finish
+    spin='-\|/'
+    i=0
+    while kill -0 $curl_pid 2>/dev/null; do
+        i=$(( (i+1) % 4 ))
+        printf "\rFetching the latest version... ${spin:$i:1}"
+        sleep 0.1
+    done
+
+    # Wait for curl to finish
+    wait $curl_pid
+    curl_exit_status=$?
+
+    # Read the result from the temp file and clean up
+    worker_version=$(cat "$temp_file")
+    rm -f "$temp_file"
+
+    if [[ $curl_exit_status -eq 0 ]]; then
+        echo -e "\n[INFO] Worker version: ${worker_version}"
+        echo -e "\nWelcome to the upgrade of BladePipe Worker, a real-time data pipeline tool."
+    else
+        echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+    fi
+
+    echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary"
+
     echo ""
 
+    # init bladepipe user
     init
 
-    worker_version=$(curl -s https://download.bladepipe.com/version)
-
+    # download the bladepipe worker
     download "https://github.com/bladepipe/worker/releases/download/v$worker_version/bladepipe.tgz"
 
+    echo ""
+
+    # begin to upgrade
     upgrade
 }
 

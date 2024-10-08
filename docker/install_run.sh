@@ -1,9 +1,35 @@
 #!/bin/bash
 
-worker_version=$(curl -s https://download.bladepipe.com/version)
+# Run the curl command in the background and write the output to a temporary file
+temp_file=$(mktemp)
+curl -s -L -f https://download.bladepipe.com/version > "$temp_file" &
+curl_pid=$!
 
-echo "Welcome to the installation of BladePipe Worker, A real time data pipeline tools, worker_version:${worker_version}"
-echo "If you encounter any problems, please report them to support@bladepipe.com."
+# Display a loading spinner while waiting for the curl command to finish
+spin='-\|/'
+i=0
+while kill -0 $curl_pid 2>/dev/null; do
+    i=$(( (i+1) % 4 ))
+    printf "\rFetching the latest version... ${spin:$i:1}"
+    sleep 0.1
+done
+
+# Wait for curl to finish
+wait $curl_pid
+curl_exit_status=$?
+
+# Read the result from the temp file and clean up
+worker_version=$(cat "$temp_file")
+rm -f "$temp_file"
+
+if [[ $curl_exit_status -eq 0 ]]; then
+    echo -e "\n[INFO] Worker version: ${worker_version}"
+    echo -e "\nWelcome to the installation of BladePipe Worker, a real-time data pipeline tool."
+else
+    echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+fi
+
+echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/install_worker_docker"
 
 echo ""
 if ! command -v docker &> /dev/null
@@ -46,13 +72,13 @@ if [ ! -f "docker-compose.yaml" ]; then
 fi
 
 echo ""
-echo "Please copy your Worker 'conf.properties' on https://cloud.bladepipe.com"
-echo "+------------------------------------------------------+"
+echo "Please copy your worker configuration from https://cloud.bladepipe.com, then paste it below:"
+echo "+------------------ PASTE CONFIG HERE ------------------+"
 read -r -e -p "" ak_input
 read -r -e -p "" sk_input
 read -r -e -p "" wsn_input
 read -r -e -p "" domain_input
-echo "+------------------------------------------------------+"
+echo "+---------------------- CONFIG END ---------------------+"
 
 if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$domain_input" ]; then
     if [[ "$(uname)" == "Linux" ]]; then
