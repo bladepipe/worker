@@ -17,6 +17,7 @@ done
 # Wait for curl to finish
 wait $curl_pid
 curl_exit_status=$?
+printf "\r\033[K"
 
 # Read the result from the temp file and clean up
 worker_version=$(cat "$temp_file")
@@ -27,6 +28,7 @@ if [[ $curl_exit_status -eq 0 ]]; then
     echo -e "\nWelcome to the installation of BladePipe Worker, a real-time data pipeline tool."
 else
     echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+    exit 1
 fi
 
 echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/install_worker_docker"
@@ -35,13 +37,13 @@ echo ""
 if ! command -v docker &> /dev/null
 then
     echo "[ERROR] Docker is not installed. Please install Docker by following the instructions at https://docs.docker.com/get-docker/"
-    exit 1
+    exit 2
 fi
 
 if ! command -v docker-compose &> /dev/null
 then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
-    exit 2
+    exit 3
 fi
 
 if [[ "$(uname)" == "Linux" ]]; then
@@ -52,14 +54,14 @@ fi
 
 if ! $dockerInfoCmd; then
     echo "[ERROR] Docker daemon is not running. Please start Docker first."
-    exit 3
+    exit 4
 fi
 
 container_name="bladepipe-worker"
 if docker ps --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
-    echo "Container '$container_name' is running. To reinstall, run the following uninstall command first:"
+    echo "[WARN] Container '$container_name' is running... To reinstall, run the following uninstall command first:"
     echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)\""
-    exit 4
+    exit 5
 fi
 
 installTopDir=/tmp/bladepipe-worker-deployment
@@ -75,16 +77,31 @@ cd ${installTopDir}
 curl -O -L -f https://download.bladepipe.com/docker/docker-compose.yaml
 if [ ! -f "docker-compose.yaml" ]; then
     echo "[ERROR] Docker compose yaml file not exist."
-    exit 5
+    exit 6
 fi
 
 echo ""
 echo "Please copy your worker configuration from https://cloud.bladepipe.com, then paste it below:"
 echo "+------------------ PASTE CONFIG HERE ------------------+"
-read -r -e -p "" ak_input
-read -r -e -p "" sk_input
-read -r -e -p "" wsn_input
-read -r -e -p "" domain_input
+
+read_non_empty_input() {
+    local input
+    while true; do
+        read -r -e -p "" input
+        input=$(echo "$input" | xargs)  # Trim leading and trailing spaces
+        if [[ -n "$input" ]]; then
+            echo "$input"
+            return
+        fi
+    done
+}
+
+# Read and validate each input
+ak_input=$(read_non_empty_input)
+sk_input=$(read_non_empty_input)
+wsn_input=$(read_non_empty_input)
+domain_input=$(read_non_empty_input)
+
 echo "+---------------------- CONFIG END ---------------------+"
 
 if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$domain_input" ]; then
@@ -113,8 +130,8 @@ if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$dom
     fi
     echo "worker_version=${worker_version}_$machine_arch" >> .env
 else
-    echo "[ERROR] BladePipe worker install fail, conf.properties can be not empty."
-    exit 6
+    echo "[ERROR] BladePipe worker install fail, configuration can be not empty."
+    exit 7
 fi
 
 echo ""
@@ -140,9 +157,9 @@ fi
 echo ""
 if [[ "$(uname)" == "Linux" ]]; then
     echo "Please enter your password for sudo:"
-    sudo docker-compose -f docker-compose.yaml up -d || exit 7
+    sudo docker-compose -f docker-compose.yaml up -d || exit 8
 else
-    docker-compose -f docker-compose.yaml up -d || exit 7
+    docker-compose -f docker-compose.yaml up -d || exit 8
 fi
 
 echo ""

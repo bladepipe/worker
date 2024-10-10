@@ -17,6 +17,7 @@ done
 # Wait for curl to finish
 wait $curl_pid
 curl_exit_status=$?
+printf "\r\033[K"
 
 # Read the result from the temp file and clean up
 worker_version=$(cat "$temp_file")
@@ -27,6 +28,7 @@ if [[ $curl_exit_status -eq 0 ]]; then
     echo -e "\nWelcome to the upgrade of BladePipe Worker, a real-time data pipeline tool."
 else
     echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+    exit 1
 fi
 
 echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/upgrade_worker_docker"
@@ -40,20 +42,20 @@ if [[ $(docker ps -a | grep $bladepipe_name) != "" ]]; then
 else
   echo "[ERROR] Please install BladePipe Worker first, latest_worker_version:$worker_version, run below command:"
   echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/install_run.sh)\""
-  exit 1
+  exit 2
 fi
 
 echo ""
 if ! command -v docker &> /dev/null
 then
     echo "[ERROR] Docker is not installed. Please install Docker by following the instructions at https://docs.docker.com/get-docker/"
-    exit 2
+    exit 3
 fi
 
 if ! command -v docker-compose &> /dev/null
 then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
-    exit 3
+    exit 4
 fi
 
 if [[ "$(uname)" == "Linux" ]]; then
@@ -64,7 +66,7 @@ fi
 
 if ! $dockerInfoCmd; then
     echo "[ERROR] Docker daemon is not running. Please start Docker first."
-    exit 4
+    exit 5
 fi
 
 installTopDir=/tmp/bladepipe-worker-deployment
@@ -81,7 +83,7 @@ cd ${installTopDir}
 curl -O -L -f https://download.bladepipe.com/docker/docker-compose.yaml
 if [ ! -f "docker-compose.yaml" ]; then
     echo "[ERROR] Docker compose yaml file not exist."
-    exit 5
+    exit 6
 fi
 
 machine_arch=$(uname -m)
@@ -115,9 +117,9 @@ fi
 echo ""
 if [[ "$(uname)" == "Linux" ]]; then
     echo "Please enter your password for sudo:"
-    sudo docker-compose -f docker-compose.yaml up -d || exit 6
+    sudo docker-compose -f docker-compose.yaml up -d || exit 7
 else
-    docker-compose -f docker-compose.yaml up -d || exit 6
+    docker-compose -f docker-compose.yaml up -d || exit 7
 fi
 
 echo ""

@@ -15,7 +15,6 @@ function tar_tgz() {
     tar --blocking-factor=$block_size --checkpoint=1 --checkpoint-action='ttyout=Unzip file progress: %u%    \r' -zxf $FILENAME
 
     echo "Finish unzip $FILENAME file."
-    echo ""
 }
 
 function init() {
@@ -25,12 +24,12 @@ function init() {
         echo "To add the user and grant permissions, you can run the following commands:"
         echo "    sudo useradd -d $USERPATH -m $USERNAME"
         echo "    sudo bash -c 'echo \"$USERNAME ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers'"
-        exit 1
+        exit 2
     fi
 
     if ! command -v java &>/dev/null; then
         echo "[ERROR] Java is not installed. Please install Java by following the instructions at https://openjdk.org/projects/jdk8/"
-        exit 2
+        exit 3
     fi
 
     cd $USERPATH
@@ -43,9 +42,9 @@ function init() {
 
     worker_app="SidecarApplication"
     if jps | grep -q "$worker_app"; then
-        echo "Worker is running. To reinstall, run the following uninstall command first:"
+        echo "[WARN] Worker is running... To reinstall, run the following uninstall command first:"
         echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/binary/uninstall.sh)\""
-        exit 3
+        exit 4
     fi
 }
 
@@ -53,33 +52,51 @@ function download() {
     URL=$1
     cd $USERPATH/tar_gz/
     if [ -f bladepipe.tgz ]; then
-        echo -e "If you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
+        echo -e "Do you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
         read -r -e -p "" re
         if [[ $re == "Y" || $re == "y" ]]; then
             echo "Will delete old BladePipe Worker installation package and download new installation package."
             rm -rf bladepipe.tgz
+            echo ""
             curl -O -L -f $URL
         fi
     else
         echo "Begin download installation package."
+        echo ""
         curl -O -L -f $URL
     fi
 
+    echo ""
     if [ -f bladepipe.tgz ]; then
         echo "BladePipe worker installation package ready."
     else
         echo "[ERROR] BladePipe worker installation package not exist."
-        exit 4
+        exit 5
     fi
 }
 
 function install() {
     echo "Please copy your Worker configuration from https://cloud.bladepipe.com, then paste it below:"
     echo "+------------------ PASTE CONFIG HERE ------------------+"
-    read -r -e -p "" ak_input
-    read -r -e -p "" sk_input
-    read -r -e -p "" wsn_input
-    read -r -e -p "" domain_input
+
+    read_non_empty_input() {
+        local input
+        while true; do
+            read -r -e -p "" input
+            input=$(echo "$input" | xargs)  # Trim leading and trailing spaces
+            if [[ -n "$input" ]]; then
+                echo "$input"
+                return
+            fi
+        done
+    }
+
+    # Read and validate each input
+    ak_input=$(read_non_empty_input)
+    sk_input=$(read_non_empty_input)
+    wsn_input=$(read_non_empty_input)
+    domain_input=$(read_non_empty_input)
+
     echo "+---------------------- CONFIG END ---------------------+"
 
     if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$domain_input" ]; then
@@ -111,8 +128,8 @@ function install() {
         echo "[SUCCESS] BladePipe Worker has been successfully installed. You can now access worker on https://cloud.bladepipe.com."
     else
         echo ""
-        echo "[ERROR] BladePipe worker install fail, conf.properties can be not empty."
-        exit 5
+        echo "[ERROR] BladePipe worker install fail, configuration can be not empty."
+        exit 6
     fi
 }
 
@@ -134,6 +151,7 @@ function __main() {
     # Wait for curl to finish
     wait $curl_pid
     curl_exit_status=$?
+    printf "\r\033[K"
 
     # Read the result from the temp file and clean up
     worker_version=$(cat "$temp_file")
@@ -144,6 +162,7 @@ function __main() {
         echo -e "\nWelcome to the installation of BladePipe Worker, a real-time data pipeline tool."
     else
         echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+        exit 1
     fi
 
     echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/install_worker_binary"

@@ -47,3 +47,5 @@ if [[ $(docker volume ls | grep $config_volume_name) != "" ]]; then
 fi
 echo "BladePipe Worker volumes deleted."
 echo ""
+
+echo "BladePipe Worker uninstalled..."

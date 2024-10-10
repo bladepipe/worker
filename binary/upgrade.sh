@@ -15,7 +15,6 @@ function tar_tgz() {
     tar --blocking-factor=$block_size --checkpoint=1 --checkpoint-action='ttyout=Unzip file progress: %u%    \r' -zxf $FILENAME
 
     echo "Finish unzip $FILENAME file"
-    echo ""
 }
 
 function init() {
@@ -25,12 +24,12 @@ function init() {
         echo "To add the user and grant permissions, you can run the following commands:"
         echo "    sudo useradd -d $USERPATH -m $USERNAME"
         echo "    sudo bash -c 'echo \"$USERNAME ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers'"
-        exit 1
+        exit 2
     fi
 
     if ! command -v java &>/dev/null; then
         echo "[ERROR] Java is not installed. Please install Java by following the instructions at https://openjdk.org/projects/jdk8/"
-        exit 2
+        exit 3
     fi
 
     cd $USERPATH
@@ -46,18 +45,21 @@ function download() {
     URL=$1
     cd $USERPATH/tar_gz/
     if [ -f bladepipe.tgz ]; then
-        echo -e "If you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
+        echo -e "Do you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
         read -r -e -p "" re
         if [[ $re == "Y" || $re == "y" ]]; then
             echo "Will delete old BladePipe Worker installation package and download new installation package"
             rm -rf bladepipe.tgz
+            echo ""
             curl -O -L -f $URL
         fi
     else
         echo "Begin download installation package"
+        echo ""
         curl -O -L -f $URL
     fi
 
+    echo ""
     if [ -f bladepipe.tgz ]; then
         echo "BladePipe worker installation package ready"
     else
@@ -132,6 +134,7 @@ function __main() {
     # Wait for curl to finish
     wait $curl_pid
     curl_exit_status=$?
+    printf "\r\033[K"
 
     # Read the result from the temp file and clean up
     worker_version=$(cat "$temp_file")
@@ -142,6 +145,7 @@ function __main() {
         echo -e "\nWelcome to the upgrade of BladePipe Worker, a real-time data pipeline tool."
     else
         echo -e "\n[ERROR] Failed to fetch the latest version. Please check your internet connection or try again later."
+        exit 1
     fi
 
     echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary"
