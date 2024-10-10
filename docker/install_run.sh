@@ -55,6 +55,13 @@ if ! $dockerInfoCmd; then
     exit 3
 fi
 
+container_name="bladepipe-worker"
+if docker ps --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
+    echo "Container '$container_name' is running. To reinstall, run the following uninstall command first:"
+    echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)\""
+    exit 4
+fi
+
 installTopDir=/tmp/bladepipe-worker-deployment
 if [ ! -d ${installTopDir} ]; then
     mkdir ${installTopDir}
@@ -68,7 +75,7 @@ cd ${installTopDir}
 curl -O -L -f https://download.bladepipe.com/docker/docker-compose.yaml
 if [ ! -f "docker-compose.yaml" ]; then
     echo "[ERROR] Docker compose yaml file not exist."
-    exit 4
+    exit 5
 fi
 
 echo ""
@@ -82,10 +89,10 @@ echo "+---------------------- CONFIG END ---------------------+"
 
 if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$domain_input" ]; then
     if [[ "$(uname)" == "Linux" ]]; then
-        ak=$(echo $ak_input | grep -oP '(?<=bladepipe\.auth\.ak=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        sk=$(echo $sk_input | grep -oP '(?<=bladepipe\.auth\.sk=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        wsn=$(echo $wsn_input | grep -oP '(?<=bladepipe\.worker\.wsn=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        domain=$(echo $domain_input | grep -oP '(?<=bladepipe\.console\.domain=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        ak=$(echo "$ak_input" | grep -oP '(?<=bladepipe\.auth\.ak=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        sk=$(echo "$sk_input" | grep -oP '(?<=bladepipe\.auth\.sk=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        wsn=$(echo "$wsn_input" | grep -oP '(?<=bladepipe\.worker\.wsn=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+        domain=$(echo "$domain_input" | grep -oP '(?<=bladepipe\.console\.domain=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
     else
         ak=$(echo "$ak_input" | awk -F 'bladepipe\\.auth\\.ak=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
         sk=$(echo "$sk_input" | awk -F 'bladepipe\\.auth\\.sk=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
@@ -107,7 +114,7 @@ if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$dom
     echo "worker_version=${worker_version}_$machine_arch" >> .env
 else
     echo "[ERROR] BladePipe worker install fail, conf.properties can be not empty."
-    exit 1
+    exit 6
 fi
 
 echo ""
@@ -133,9 +140,9 @@ fi
 echo ""
 if [[ "$(uname)" == "Linux" ]]; then
     echo "Please enter your password for sudo:"
-    sudo docker-compose -f docker-compose.yaml up -d || exit 5
+    sudo docker-compose -f docker-compose.yaml up -d || exit 7
 else
-    docker-compose -f docker-compose.yaml up -d || exit 5
+    docker-compose -f docker-compose.yaml up -d || exit 7
 fi
 
 echo ""

@@ -21,6 +21,14 @@ For more details, please refer to the official documentation: [Install Worker (D
 
 For more details, please refer to the official documentation: [Upgrade Worker (Docker)](https://doc.bladepipe.com/productOP/docker/upgrade_worker_docker).
 
+### Uninstall Worker
+
+```shell
+/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)"
+```
+
+For more details, please refer to the official documentation: [Uninstall Worker (Docker)](https://doc.bladepipe.com/productOP/docker/uninstall_worker_docker).
+
 ## Binary
 
 ### Install Worker
@@ -31,10 +39,18 @@ For more details, please refer to the official documentation: [Upgrade Worker (D
 
 For more details, please refer to the official documentation: [Install Worker (Binary)](https://doc.bladepipe.com/productOP/binary/install_worker_binary).
 
-Upgrade Worker
+### Upgrade Worker
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://download.bladepipe.com/binary/upgrade.sh)"
 ```
 
 For more details, please refer to the official documentation: [Upgrade Worker (Binary)](https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary).
+
+### Uninstall Worker
+
+```shell
+/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/binary/uninstall.sh)"
+```
+
+For more details, please refer to the official documentation: [Uninstall Worker (Binary)](https://doc.bladepipe.com/productOP/binary/uninstall_worker_binary).

@@ -14,6 +14,13 @@ const config = {
             docLink: 'https://doc.bladepipe.com/productOP/docker/upgrade_worker_docker',
             command: '/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/docker/upgrade.sh)"',
         },
+        {
+            title: 'Uninstall Worker',
+            link: 'https://download.bladepipe.com/docker/uninstall.sh',
+            docTitle: 'Uninstall Worker (Docker)',
+            docLink: 'https://doc.bladepipe.com/productOP/docker/uninstall_worker_docker',
+            command: '/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)"',
+        },
     ],
     'Binary': [
         {
@@ -29,6 +36,13 @@ const config = {
             docTitle: 'Upgrade Worker (Binary)',
             docLink: 'https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary',
             command: '/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/binary/upgrade.sh)"',
+        },
+        {
+            title: 'Uninstall Worker',
+            link: 'https://download.bladepipe.com/binary/uninstall.sh',
+            docTitle: 'Uninstall Worker (Binary)',
+            docLink: 'https://doc.bladepipe.com/productOP/binary/uninstall_worker_docker',
+            command: '/bin/bash -c "$(curl -fsSL https://download.bladepipe.com/binary/uninstall.sh)"',
         },
     ]
 }

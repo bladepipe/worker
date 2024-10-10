@@ -47,13 +47,13 @@ echo ""
 if ! command -v docker &> /dev/null
 then
     echo "[ERROR] Docker is not installed. Please install Docker by following the instructions at https://docs.docker.com/get-docker/"
-    exit 1
+    exit 2
 fi
 
 if ! command -v docker-compose &> /dev/null
 then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
-    exit 2
+    exit 3
 fi
 
 if [[ "$(uname)" == "Linux" ]]; then
@@ -64,7 +64,7 @@ fi
 
 if ! $dockerInfoCmd; then
     echo "[ERROR] Docker daemon is not running. Please start Docker first."
-    exit 3
+    exit 4
 fi
 
 installTopDir=/tmp/bladepipe-worker-deployment
@@ -81,7 +81,7 @@ cd ${installTopDir}
 curl -O -L -f https://download.bladepipe.com/docker/docker-compose.yaml
 if [ ! -f "docker-compose.yaml" ]; then
     echo "[ERROR] Docker compose yaml file not exist."
-    exit 4
+    exit 5
 fi
 
 machine_arch=$(uname -m)
@@ -115,9 +115,9 @@ fi
 echo ""
 if [[ "$(uname)" == "Linux" ]]; then
     echo "Please enter your password for sudo:"
-    sudo docker-compose -f docker-compose.yaml up -d || exit 5
+    sudo docker-compose -f docker-compose.yaml up -d || exit 6
 else
-    docker-compose -f docker-compose.yaml up -d || exit 5
+    docker-compose -f docker-compose.yaml up -d || exit 6
 fi
 
 echo ""

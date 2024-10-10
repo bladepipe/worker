@@ -25,12 +25,12 @@ function init() {
         echo "To add the user and grant permissions, you can run the following commands:"
         echo "    sudo useradd -d $USERPATH -m $USERNAME"
         echo "    sudo bash -c 'echo \"$USERNAME ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers'"
-        exit 2
+        exit 1
     fi
 
     if ! command -v java &>/dev/null; then
         echo "[ERROR] Java is not installed. Please install Java by following the instructions at https://openjdk.org/projects/jdk8/"
-        exit 3
+        exit 2
     fi
 
     cd $USERPATH
@@ -40,6 +40,13 @@ function init() {
     fi
 
     chown -R $USERNAME:$USERNAME $USERPATH/
+
+    worker_app="SidecarApplication"
+    if jps | grep -q "$worker_app"; then
+        echo "Worker is running. To reinstall, run the following uninstall command first:"
+        echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/binary/uninstall.sh)\""
+        exit 3
+    fi
 }
 
 function download() {
