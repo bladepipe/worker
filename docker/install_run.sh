@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/install_worker_docker"
+echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/install_worker_docker/"
 
 echo ""
 if ! command -v docker &> /dev/null
@@ -163,4 +163,4 @@ else
 fi
 
 echo ""
-echo "[SUCCESS] BladePipe Worker has been successfully installed. You can now access worker on https://cloud.bladepipe.com."
+echo "[SUCCESS] BladePipe Worker has been successfully installed. You can now access worker on https://cloud.bladepipe.com"

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-echo -e "[WARN] Do you really want to uninstall BladePipe Worker (this will remove all metadata as well)? \c"
+echo -e "[WARN] Do you really want to uninstall BladePipe Worker (this will remove all metadata as well) (Y/N)? \c"
 
-read -r -e -p "(Y/N):" re
+read -r -e -p "" re
 
 if [[ $re == "N" || $re == "n" ]]; then
    echo -e "Thank you for your mercy. have fun :)"

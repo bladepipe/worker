@@ -31,7 +31,7 @@ else
     exit 1
 fi
 
-echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/upgrade_worker_docker"
+echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/upgrade_worker_docker/"
 
 echo ""
 bladepipe_name=bladepipe
@@ -123,4 +123,4 @@ else
 fi
 
 echo ""
-echo "[SUCCESS] BladePipe Worker has been successfully upgraded. You can now access worker on https://cloud.bladepipe.com."
+echo "[SUCCESS] BladePipe Worker has been successfully upgraded. You can now access worker on https://cloud.bladepipe.com"

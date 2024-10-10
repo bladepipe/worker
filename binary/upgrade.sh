@@ -10,11 +10,11 @@ function tar_tgz() {
     block_size=$(expr $block_size + 2500)
 
     echo ""
-    echo "Begin start unzip $FILENAME file"
+    echo "Begin to start unzip $FILENAME file."
 
     tar --blocking-factor=$block_size --checkpoint=1 --checkpoint-action='ttyout=Unzip file progress: %u%    \r' -zxf $FILENAME
 
-    echo "Finish unzip $FILENAME file"
+    echo "Finish unzip $FILENAME file."
 }
 
 function init() {
@@ -48,22 +48,22 @@ function download() {
         echo -e "Do you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
         read -r -e -p "" re
         if [[ $re == "Y" || $re == "y" ]]; then
-            echo "Will delete old BladePipe Worker installation package and download new installation package"
+            echo "Will delete old BladePipe Worker installation package and download new installation package."
             rm -rf bladepipe.tgz
             echo ""
             curl -O -L -f $URL
         fi
     else
-        echo "Begin download installation package"
+        echo "Begin to download installation package."
         echo ""
         curl -O -L -f $URL
     fi
 
     echo ""
     if [ -f bladepipe.tgz ]; then
-        echo "BladePipe worker installation package ready"
+        echo "BladePipe worker installation package ready."
     else
-        echo "[ERROR] BladePipe worker installation package not exist"
+        echo "[ERROR] BladePipe worker installation package not exist."
         exit 4
     fi
 }
@@ -94,6 +94,7 @@ function upgrade() {
     tar_tgz bladepipe-ds.tar.gz
     tar_tgz bladepipe-worker.tar.gz
 
+    echo ""
     cp -r $bakPath/global_conf/conf.properties $USERPATH/bladepipe/global_conf/conf.properties
 
     chown -R $USERNAME:$USERNAME $USERPATH/
@@ -113,7 +114,7 @@ function upgrade() {
     rm -f bladepipe.tgz bladepipe-core.tar.gz bladepipe-ds.tar.gz bladepipe-sidecar.tar.gz
 
     echo ""
-    echo "[SUCCESS] BladePipe Worker has been successfully upgraded. You can now access worker on https://cloud.bladepipe.com."
+    echo "[SUCCESS] BladePipe Worker has been successfully upgraded. You can now access worker on https://cloud.bladepipe.com"
 }
 
 function __main() {
@@ -148,7 +149,7 @@ function __main() {
         exit 1
     fi
 
-    echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary"
+    echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/upgrade_worker_binary/"
 
     echo ""
 

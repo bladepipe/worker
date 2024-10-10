@@ -10,7 +10,7 @@ function tar_tgz() {
     block_size=$(expr $block_size + 2500)
 
     echo ""
-    echo "Begin start unzip $FILENAME file."
+    echo "Begin to start unzip $FILENAME file."
 
     tar --blocking-factor=$block_size --checkpoint=1 --checkpoint-action='ttyout=Unzip file progress: %u%    \r' -zxf $FILENAME
 
@@ -61,7 +61,7 @@ function download() {
             curl -O -L -f $URL
         fi
     else
-        echo "Begin download installation package."
+        echo "Begin to download installation package."
         echo ""
         curl -O -L -f $URL
     fi
@@ -109,6 +109,7 @@ function install() {
         tar_tgz bladepipe-ds.tar.gz
         tar_tgz bladepipe-worker.tar.gz
 
+        echo ""
         echo "$ak_input" > $USERPATH/bladepipe/global_conf/conf.properties
         echo "$sk_input" >> $USERPATH/bladepipe/global_conf/conf.properties
         echo "$wsn_input" >> $USERPATH/bladepipe/global_conf/conf.properties
@@ -165,7 +166,7 @@ function __main() {
         exit 1
     fi
 
-    echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/install_worker_binary"
+    echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/binary/install_worker_binary/"
 
     echo ""
 
