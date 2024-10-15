@@ -121,14 +121,7 @@ if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$dom
     echo "APP_CLIENT_SK=$sk" >> .env
     echo "APP_CLIENT_WSN=$wsn" >> .env
     echo "APP_CLOUD_DOMAIN=$domain" >> .env
-
-    machine_arch=$(uname -m)
-    if [[ $machine_arch == *"arm"* || $machine_arch == *"aarch"* ]]; then
-       machine_arch="arm64"
-    elif [[ $machine_arch == *"x86"* ]]; then
-       machine_arch="x86"
-    fi
-    echo "worker_version=${worker_version}_$machine_arch" >> .env
+    echo "worker_version=${worker_version}" >> .env
 else
     echo "[ERROR] BladePipe worker install fail, configuration can be not empty."
     exit 7

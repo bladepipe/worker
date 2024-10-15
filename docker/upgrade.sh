@@ -86,13 +86,7 @@ if [ ! -f "docker-compose.yaml" ]; then
     exit 6
 fi
 
-machine_arch=$(uname -m)
-if [[ $machine_arch == *"arm"* || $machine_arch == *"aarch"* ]]; then
-   machine_arch="arm64"
-elif [[ $machine_arch == *"x86"* ]]; then
-   machine_arch="x86"
-fi
-echo "worker_version=${worker_version}_$machine_arch" > .env
+echo "worker_version=${worker_version}" > .env
 
 echo ""
 log_volume_name=bladepipe_worker_log_volume
