@@ -58,10 +58,27 @@ if ! $dockerInfoCmd; then
 fi
 
 container_name="bladepipe-worker"
-if docker ps --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
-    echo "[WARN] Container '$container_name' is running... To reinstall, run the following uninstall command first:"
+if docker ps -a --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
+    echo "[WARN] Container '$container_name' exists... To reinstall, run the following uninstall command first:"
     echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)\""
     exit 5
+fi
+
+log_volume_name=bladepipe_worker_log_volume
+if [[ $(docker volume ls | grep $log_volume_name) != "" ]]; then
+    echo "Begin to delete old $log_volume_name..."
+    docker volume rm $log_volume_name
+    echo -e "Delete old $log_volume_name successfully."
+    echo ""
+fi
+
+
+config_volume_name=bladepipe_worker_config_volume
+if [[ $(docker volume ls | grep $config_volume_name) != "" ]]; then
+    echo "Begin to delete old $config_volume_name..."
+    docker volume rm $config_volume_name
+    echo -e "Delete old $config_volume_name successfully."
+    echo ""
 fi
 
 installTopDir=/tmp/bladepipe-worker-deployment
@@ -128,7 +145,6 @@ else
 fi
 
 echo ""
-log_volume_name=bladepipe_worker_log_volume
 if [[ $(docker volume ls | grep $log_volume_name) == "" ]]; then
     echo "Begin to create bladepipe_worker_log_volume..."
     docker volume create $log_volume_name
@@ -138,7 +154,6 @@ else
 fi
 
 echo ""
-config_volume_name=bladepipe_worker_config_volume
 if [[ $(docker volume ls | grep $config_volume_name) == "" ]]; then
     echo "Begin to create bladepipe_worker_config_volume..."
     docker volume create $config_volume_name

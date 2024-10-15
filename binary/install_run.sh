@@ -42,7 +42,7 @@ function init() {
 
     worker_app="SidecarApplication"
     if jps | grep -q "$worker_app"; then
-        echo "[WARN] Worker is running... To reinstall, run the following uninstall command first:"
+        echo "[WARN] Worker exists... To reinstall, run the following uninstall command first:"
         echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/binary/uninstall.sh)\""
         exit 4
     fi
