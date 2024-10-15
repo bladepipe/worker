@@ -2,14 +2,14 @@
 
 # Run the curl command in the background and write the output to a temporary file
 temp_file=$(mktemp)
-curl -s -L -f https://download.bladepipe.com/version > "$temp_file" &
+curl -s -L -f https://download.bladepipe.com/version >"$temp_file" &
 curl_pid=$!
 
 # Display a loading spinner while waiting for the curl command to finish
 spin='-\|/'
 i=0
 while kill -0 $curl_pid 2>/dev/null; do
-    i=$(( (i+1) % 4 ))
+    i=$(((i + 1) % 4))
     printf "\rFetching the latest version... ${spin:$i:1}"
     sleep 0.1
 done
@@ -36,24 +36,33 @@ echo "If you encounter any problems, please report them to support@bladepipe.com
 echo ""
 bladepipe_name=bladepipe
 if [[ $(docker ps -a | grep $bladepipe_name) != "" ]]; then
-  # shellcheck disable=SC2046
-  old_worker_version=$(docker ps -a | grep $bladepipe_name | awk '{print $2}')
-  echo "Old_worker_version:$old_worker_version -> Latest_worker_version:$worker_version."
+    old_worker_version=$(docker ps -a | grep bladepipe | awk '{print $2}' | awk -F ':' '{print $2}')
+
+    if [[ $old_worker_version == "$worker_version" ]]; then
+        echo "Your worker is up to date."
+        exit 2
+    fi
+
+    echo -e "[INFO] Do you want to upgrade BladePipe Worker from $old_worker_version -> $worker_version (Y/N)? \c"
+    read -r -e -p "" re
+
+    if [[ $re == "N" || $re == "n" ]]; then
+        echo -e "Upgrade stopped. have fun :)"
+        exit 2
+    fi
 else
-  echo "[ERROR] Please install BladePipe Worker first, latest_worker_version:$worker_version, run below command:"
-  echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/install_run.sh)\""
-  exit 2
+    echo "[ERROR] Please install BladePipe Worker first, latest_worker_version:$worker_version, run below command:"
+    echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/install_run.sh)\""
+    exit 2
 fi
 
 echo ""
-if ! command -v docker &> /dev/null
-then
+if ! command -v docker &>/dev/null; then
     echo "[ERROR] Docker is not installed. Please install Docker by following the instructions at https://docs.docker.com/get-docker/"
     exit 3
 fi
 
-if ! command -v docker-compose &> /dev/null
-then
+if ! command -v docker-compose &>/dev/null; then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
     exit 4
 fi
@@ -86,7 +95,7 @@ if [ ! -f "docker-compose.yaml" ]; then
     exit 6
 fi
 
-echo "worker_version=${worker_version}" > .env
+echo "worker_version=${worker_version}" >.env
 
 echo ""
 log_volume_name=bladepipe_worker_log_volume

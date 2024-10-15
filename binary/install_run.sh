@@ -52,7 +52,7 @@ function download() {
     URL=$1
     cd $USERPATH/tar_gz/
     if [ -f bladepipe.tgz ]; then
-        echo -e "Do you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
+        echo -e "[INFO] Do you want to delete the old BladePipe Worker installation package and download it again (Y/N)? \c"
         read -r -e -p "" re
         if [[ $re == "Y" || $re == "y" ]]; then
             echo "Will delete old BladePipe Worker installation package and download new installation package."

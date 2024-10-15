@@ -45,7 +45,7 @@ function download() {
     URL=$1
     cd $USERPATH/tar_gz/
     if [ -f bladepipe.tgz ]; then
-        echo -e "Do you want to delete the old BladePipe Worker installation package and download it again(Y/N)? \c"
+        echo -e "[INFO] Do you want to delete the old BladePipe Worker installation package and download it again (Y/N)? \c"
         read -r -e -p "" re
         if [[ $re == "Y" || $re == "y" ]]; then
             echo "Will delete old BladePipe Worker installation package and download new installation package."
@@ -155,6 +155,21 @@ function __main() {
 
     # init bladepipe user
     init
+
+    old_worker_version=$(cat /home/bladepipe/bladepipe/worker/conf/build-info.properties | grep mainVersion | awk -F = '{print $2}')
+
+    if [[ $old_worker_version == "$worker_version" ]]; then
+        echo "Your worker is up to date."
+        exit 1
+    fi
+
+    echo -e "[INFO] Do you want to upgrade BladePipe Worker from $old_worker_version -> $worker_version (Y/N)? \c"
+    read -r -e -p "" re
+
+    if [[ $re == "N" || $re == "n" ]]; then
+        echo -e "Upgrade stopped. have fun :)"
+        exit 1
+    fi
 
     # download the bladepipe worker
     download "https://github.com/bladepipe/worker/releases/download/v$worker_version/bladepipe.tgz"
