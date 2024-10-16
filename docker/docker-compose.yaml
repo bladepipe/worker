@@ -1,7 +1,7 @@
 version: '3.0'
 
 services:
-  sidecar:
+  worker:
     image: bladepipe/worker:${worker_version}
     container_name: bladepipe-worker
     volumes:
