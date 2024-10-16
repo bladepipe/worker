@@ -79,23 +79,42 @@ function install() {
     echo "Please copy your Worker configuration from https://cloud.bladepipe.com, then paste it below:"
     echo "+------------------ PASTE CONFIG HERE ------------------+"
 
-    read_non_empty_input() {
-        local input
+    read_non_empty_input_block() {
+        local input result=""
+        local count=0
+
         while true; do
-            read -r -e -p "" input
-            input=$(echo "$input" | xargs)  # Trim leading and trailing spaces
+            IFS= read -r input
+            input=$(echo "$input" | xargs)
+
             if [[ -n "$input" ]]; then
-                echo "$input"
-                return
+                result="${result}${input}"$'\n'
+                count=$((count + 1))
+
+                if [[ $count -eq 4 ]]; then
+                    break
+                fi
             fi
         done
+
+        echo "$result"
     }
 
-    # Read and validate each input
-    ak_input=$(read_non_empty_input)
-    sk_input=$(read_non_empty_input)
-    wsn_input=$(read_non_empty_input)
-    domain_input=$(read_non_empty_input)
+    # Read the configuration block
+    config_block=$(read_non_empty_input_block)
+
+    # Parse each line and extract the values
+    while IFS= read -r line; do
+        if [[ "$line" == *bladepipe.auth.ak=* ]]; then
+            ak_input="${line#*=}"
+        elif [[ "$line" == *bladepipe.auth.sk=* ]]; then
+            sk_input="${line#*=}"
+        elif [[ "$line" == *bladepipe.worker.wsn=* ]]; then
+            wsn_input="${line#*=}"
+        elif [[ "$line" == *bladepipe.console.domain=* ]]; then
+            domain_input="${line#*=}"
+        fi
+    done <<< "$config_block"
 
     echo "+---------------------- CONFIG END ---------------------+"
 
@@ -110,10 +129,10 @@ function install() {
         tar_tgz bladepipe-worker.tar.gz
 
         echo ""
-        echo "$ak_input" > $USERPATH/bladepipe/global_conf/conf.properties
-        echo "$sk_input" >> $USERPATH/bladepipe/global_conf/conf.properties
-        echo "$wsn_input" >> $USERPATH/bladepipe/global_conf/conf.properties
-        echo "$domain_input" >> $USERPATH/bladepipe/global_conf/conf.properties
+        echo "bladepipe.auth.ak=$ak_input" > $USERPATH/bladepipe/global_conf/conf.properties
+        echo "bladepipe.auth.sk=$sk_input" >> $USERPATH/bladepipe/global_conf/conf.properties
+        echo "bladepipe.worker.wsn=$wsn_input" >> $USERPATH/bladepipe/global_conf/conf.properties
+        echo "bladepipe.console.domain=$domain_input" >> $USERPATH/bladepipe/global_conf/conf.properties
 
         chown -R $USERNAME:$USERNAME $USERPATH/
 

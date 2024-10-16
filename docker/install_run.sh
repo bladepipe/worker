@@ -2,14 +2,14 @@
 
 # Run the curl command in the background and write the output to a temporary file
 temp_file=$(mktemp)
-curl -s -L -f https://download.bladepipe.com/version > "$temp_file" &
+curl -s -L -f https://download.bladepipe.com/version >"$temp_file" &
 curl_pid=$!
 
 # Display a loading spinner while waiting for the curl command to finish
 spin='-\|/'
 i=0
 while kill -0 $curl_pid 2>/dev/null; do
-    i=$(( (i+1) % 4 ))
+    i=$(((i + 1) % 4))
     printf "\rFetching the latest version... ${spin:$i:1}"
     sleep 0.1
 done
@@ -34,14 +34,12 @@ fi
 echo "If you encounter any problems, please report them to support@bladepipe.com, or refer to our documentation here: https://doc.bladepipe.com/productOP/docker/install_worker_docker/"
 
 echo ""
-if ! command -v docker &> /dev/null
-then
+if ! command -v docker &>/dev/null; then
     echo "[ERROR] Docker is not installed. Please install Docker by following the instructions at https://docs.docker.com/get-docker/"
     exit 2
 fi
 
-if ! command -v docker-compose &> /dev/null
-then
+if ! command -v docker-compose &>/dev/null; then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
     exit 3
 fi
@@ -72,7 +70,6 @@ if [[ $(docker volume ls | grep $log_volume_name) != "" ]]; then
     echo ""
 fi
 
-
 config_volume_name=bladepipe_worker_config_volume
 if [[ $(docker volume ls | grep $config_volume_name) != "" ]]; then
     echo "Begin to delete old $config_volume_name..."
@@ -101,44 +98,51 @@ echo ""
 echo "Please copy your worker configuration from https://cloud.bladepipe.com, then paste it below:"
 echo "+------------------ PASTE CONFIG HERE ------------------+"
 
-read_non_empty_input() {
-    local input
+read_non_empty_input_block() {
+    local input result=""
+    local count=0
+
     while true; do
-        read -r -e -p "" input
-        input=$(echo "$input" | xargs)  # Trim leading and trailing spaces
+        IFS= read -r input
+        input=$(echo "$input" | xargs)
+
         if [[ -n "$input" ]]; then
-            echo "$input"
-            return
+            result="${result}${input}"$'\n'
+            count=$((count + 1))
+
+            if [[ $count -eq 4 ]]; then
+                break
+            fi
         fi
     done
+
+    echo "$result"
 }
 
-# Read and validate each input
-ak_input=$(read_non_empty_input)
-sk_input=$(read_non_empty_input)
-wsn_input=$(read_non_empty_input)
-domain_input=$(read_non_empty_input)
+# Read the configuration block
+config_block=$(read_non_empty_input_block)
+
+# Parse each line and extract the values
+while IFS= read -r line; do
+    if [[ "$line" == *bladepipe.auth.ak=* ]]; then
+        ak_input="${line#*=}"
+    elif [[ "$line" == *bladepipe.auth.sk=* ]]; then
+        sk_input="${line#*=}"
+    elif [[ "$line" == *bladepipe.worker.wsn=* ]]; then
+        wsn_input="${line#*=}"
+    elif [[ "$line" == *bladepipe.console.domain=* ]]; then
+        domain_input="${line#*=}"
+    fi
+done <<<"$config_block"
 
 echo "+---------------------- CONFIG END ---------------------+"
 
 if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$domain_input" ]; then
-    if [[ "$(uname)" == "Linux" ]]; then
-        ak=$(echo "$ak_input" | grep -oP '(?<=bladepipe\.auth\.ak=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        sk=$(echo "$sk_input" | grep -oP '(?<=bladepipe\.auth\.sk=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        wsn=$(echo "$wsn_input" | grep -oP '(?<=bladepipe\.worker\.wsn=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        domain=$(echo "$domain_input" | grep -oP '(?<=bladepipe\.console\.domain=).*' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    else
-        ak=$(echo "$ak_input" | awk -F 'bladepipe\\.auth\\.ak=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        sk=$(echo "$sk_input" | awk -F 'bladepipe\\.auth\\.sk=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        wsn=$(echo "$wsn_input" | awk -F 'bladepipe\\.worker\\.wsn=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-        domain=$(echo "$domain_input" | awk -F 'bladepipe\\.console\\.domain=' '{print $2}' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-    fi
-
-    echo "APP_CLIENT_AK=$ak" > .env
-    echo "APP_CLIENT_SK=$sk" >> .env
-    echo "APP_CLIENT_WSN=$wsn" >> .env
-    echo "APP_CLOUD_DOMAIN=$domain" >> .env
-    echo "worker_version=${worker_version}" >> .env
+    echo "APP_CLIENT_AK=$ak_input" >.env
+    echo "APP_CLIENT_SK=$sk_input" >>.env
+    echo "APP_CLIENT_WSN=$wsn_input" >>.env
+    echo "APP_CLOUD_DOMAIN=$domain_input" >>.env
+    echo "worker_version=${worker_version}" >>.env
 else
     echo "[ERROR] BladePipe worker install fail, configuration can be not empty."
     exit 7
