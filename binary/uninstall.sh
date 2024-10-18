@@ -19,9 +19,9 @@ script_path="$USERPATH/bladepipe/worker/bin/stopWorker.sh"
 if [[ -f "$script_path" ]]; then
     echo ""
     if [ "$(whoami)" == "$USERNAME" ]; then
-        sh "$script_path"
+        bash "$script_path"
     else
-        su $USERNAME -c "sh $script_path"
+        su $USERNAME -c "bash $script_path"
     fi
 fi
 

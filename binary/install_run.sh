@@ -24,6 +24,7 @@ function init() {
         echo "To add the user and grant permissions, you can run the following commands:"
         echo "    sudo useradd -d $USERPATH -m $USERNAME"
         echo "    sudo bash -c 'echo \"$USERNAME ALL=(ALL) NOPASSWD:ALL\" >> /etc/sudoers'"
+        echo "    sudo bash -c 'passwd $USERNAME'"
         exit 2
     fi
 
@@ -32,7 +33,7 @@ function init() {
         exit 3
     fi
 
-    cd $USERPATH
+    cd $USERPATH || exit 3
 
     if [ ! -d $USERPATH/tar_gz/ ]; then
         mkdir $USERPATH/tar_gz/
@@ -137,9 +138,9 @@ function install() {
         chown -R $USERNAME:$USERNAME $USERPATH/
 
         if [ "$(whoami)" == "$USERNAME" ]; then
-            sh ./bladepipe/worker/bin/startWorker.sh
+            bash /home/bladepipe/bladepipe/worker/bin/startWorker.sh
         else
-            su $USERNAME -c "sh ./bladepipe/worker/bin/startWorker.sh"
+            su $USERNAME -c "bash /home/bladepipe/bladepipe/worker/bin/startWorker.sh"
         fi
 
         rm -f bladepipe.tgz bladepipe-core.tar.gz bladepipe-ds.tar.gz bladepipe-worker.tar.gz
