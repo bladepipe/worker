@@ -44,11 +44,16 @@ if ! command -v docker-compose &>/dev/null; then
     exit 3
 fi
 
-if [[ "$(uname)" == "Linux" ]]; then
-    dockerInfoCmd=$(sudo docker info >/dev/null 2>&1)
-else
-    dockerInfoCmd=$(docker info >/dev/null 2>&1)
-fi
+docker_command() {
+    if [[ "$(uname)" == "Linux" && $(id -u) -ne 0 ]]; then
+        echo "Please enter your password for sudo:"
+        sudo docker "$@"
+    else
+        docker "$@"
+    fi
+}
+
+dockerInfoCmd=$(docker_command info >/dev/null 2>&1)
 
 if ! $dockerInfoCmd; then
     echo "[ERROR] Docker daemon is not running. Please start Docker first."
@@ -56,16 +61,16 @@ if ! $dockerInfoCmd; then
 fi
 
 container_name="bladepipe-worker"
-if docker ps -a --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
+if docker_command ps -a --filter "name=$container_name" --format "{{.Names}}" | grep -q "^$container_name$"; then
     echo "[WARN] Container '$container_name' exists... To reinstall, run the following uninstall command first:"
     echo "/bin/bash -c \"\$(curl -fsSL https://download.bladepipe.com/docker/uninstall.sh)\""
     exit 5
 fi
 
 log_volume_name=bladepipe_worker_log_volume
-if [[ $(docker volume ls | grep $log_volume_name) != "" ]]; then
+if [[ $(docker_command volume ls | grep $log_volume_name) != "" ]]; then
     echo "Begin to delete old $log_volume_name..."
-    docker volume rm $log_volume_name
+    docker_command volume rm $log_volume_name || exit 6
     echo -e "Delete old $log_volume_name successfully."
     echo ""
 fi
@@ -73,7 +78,7 @@ fi
 config_volume_name=bladepipe_worker_config_volume
 if [[ $(docker volume ls | grep $config_volume_name) != "" ]]; then
     echo "Begin to delete old $config_volume_name..."
-    docker volume rm $config_volume_name
+    docker_command volume rm $config_volume_name || exit 7
     echo -e "Delete old $config_volume_name successfully."
     echo ""
 fi
@@ -91,7 +96,7 @@ cd ${installTopDir}
 curl -O -L -f https://download.bladepipe.com/docker/docker-compose.yaml
 if [ ! -f "docker-compose.yaml" ]; then
     echo "[ERROR] Docker compose yaml file not exist."
-    exit 6
+    exit 8
 fi
 
 echo ""
@@ -145,34 +150,47 @@ if [ -n "$ak_input" ] && [ -n "$sk_input" ] && [ -n "$wsn_input" ] && [ -n "$dom
     echo "worker_version=${worker_version}" >>.env
 else
     echo "[ERROR] BladePipe worker install fail, configuration can be not empty."
-    exit 7
+    exit 9
 fi
 
 echo ""
-if [[ $(docker volume ls | grep $log_volume_name) == "" ]]; then
-    echo "Begin to create bladepipe_worker_log_volume..."
-    docker volume create $log_volume_name
-    echo -e "Create bladepipe_worker_log_volume successfully."
+if [[ $(docker_command volume ls | grep $log_volume_name) == "" ]]; then
+    echo "Begin to create $log_volume_name..."
+    docker_command volume create $log_volume_name || exit 10
+    echo -e "Create $log_volume_name successfully."
 else
-    echo "Volume bladepipe_worker_log_volume is already exist.reuse it."
+    echo "Volume $log_volume_name is already exist.reuse it."
 fi
 
 echo ""
-if [[ $(docker volume ls | grep $config_volume_name) == "" ]]; then
-    echo "Begin to create bladepipe_worker_config_volume..."
-    docker volume create $config_volume_name
-    echo -e "Create bladepipe_worker_config_volume successfully."
+if [[ $(docker_command volume ls | grep $config_volume_name) == "" ]]; then
+    echo "Begin to create $config_volume_name..."
+    docker_command volume create $config_volume_name || exit 11
+    echo -e "Create $config_volume_name successfully."
 else
-    echo "Volume bladepipe_worker_config_volume is already exist.reuse it."
+    echo "Volume $config_volume_name is already exist.reuse it."
 fi
 
+docker_compose_command() {
+    if ! command -v docker-compose &>/dev/null; then
+        if [[ "$(uname)" == "Linux" && $(id -u) -ne 0 ]]; then
+            echo "Please enter your password for sudo:"
+            sudo docker-compose "$@"
+        else
+            docker-compose "$@"
+        fi
+    else
+        if [[ "$(uname)" == "Linux" && $(id -u) -ne 0 ]]; then
+            echo "Please enter your password for sudo:"
+            sudo docker compose "$@"
+        else
+            docker compose "$@"
+        fi
+    fi
+}
+
 echo ""
-if [[ "$(uname)" == "Linux" ]]; then
-    echo "Please enter your password for sudo:"
-    sudo docker-compose -f docker-compose.yaml up -d || exit 8
-else
-    docker-compose -f docker-compose.yaml up -d || exit 8
-fi
+docker_compose_command -f docker-compose.yaml up -d || exit 9
 
 echo ""
 echo "[SUCCESS] BladePipe Worker has been successfully installed. You can now access worker on https://cloud.bladepipe.com"
