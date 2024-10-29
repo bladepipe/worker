@@ -39,7 +39,7 @@ if ! command -v docker &>/dev/null; then
     exit 2
 fi
 
-if ! command -v docker-compose &>/dev/null; then
+if ! command -v docker-compose &>/dev/null && ! command -v docker compose &>/dev/null; then
     echo "[ERROR] Docker Compose is not installed. Please install Docker Compose by following the instructions at https://docs.docker.com/compose/install/"
     exit 3
 fi
@@ -172,7 +172,7 @@ else
 fi
 
 docker_compose_command() {
-    if ! command -v docker-compose &>/dev/null; then
+    if command -v docker-compose &>/dev/null; then
         if [[ "$(uname)" == "Linux" && $(id -u) -ne 0 ]]; then
             echo "Please enter your password for sudo:"
             sudo docker-compose "$@"
