@@ -9,6 +9,7 @@ services:
       - bladepipe_worker_config_volume:/home/bladepipe/bladepipe/global_conf
     ports:
       - "18787:8787"
+      - "18089:18089"
     env_file:
       - .env
 volumes:
